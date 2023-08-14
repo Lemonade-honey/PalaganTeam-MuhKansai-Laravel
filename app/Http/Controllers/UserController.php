@@ -14,7 +14,7 @@ class UserController extends Controller
     public function list(){
         $users = DB::table('users')->orderByDesc('id')->paginate(10);
 
-        return view('User/user-list', compact('users'));
+        return view('user.user', compact('users'));
     }
 
     /**
@@ -63,6 +63,19 @@ class UserController extends Controller
     }
 
     /**
+     * Search User
+     */
+    public function search(Request $request){
+        $users = DB::table('users')
+        ->where("name", "like", "%". $request->search . "%")
+        ->orWhere("email", "like", "%". $request->search ."%")
+        ->paginate(10);
+
+        return view('user.user', compact('users'));
+    }
+
+
+    /**
      * GET Delete User
      */
     public function delete(int $id){
@@ -74,5 +87,16 @@ class UserController extends Controller
 
         $user->delete();
         return redirect()->route('users.list')->with('success', 'User Success Delete');
+    }
+
+    /**
+     * GET User Profile
+     */
+    public function profile(){
+        if(auth()->check()){
+            return dd('blm login');
+        }
+
+        return dd('sudah login');
     }
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>List News</title>
+    <title>Form List Member</title>
 </head>
 <body>
     @if (session()->has('success'))
@@ -19,32 +19,25 @@
     <table>
         <thead>
             <th>No</th>
-            <th>Nama Acara</th>
-            <th>Tanggal Acara</th>
-            <th>Created At</th>
+            <th>Email</th>
             <th>Action</th>
         </thead>
         <tbody>
-            @forelse ($activity as $key => $value)
+            <?php $i = 1; ?>
+            @forelse ($member as $item)
                 <tr>
-                    <td>{{ ($activity->currentPage() - 1) * $activity->perPage() + $key + 1 }}</td>
-                    <td>{{ $value->title }}</td>
-                    <td>{{ $value->tanggal }}</td>
-                    <td>{{ $value->created_at }}</td>
+                    <td>{{ $i++ }}</td>
+                    <td>{{ $item }}</td>
                     <td>
-                        <a href="{{ route('activity.update', ['id' => $value->id]) }}">Edit</a>
-                        <a href="{{ route('activity.delete', ['id' => $value->id]) }}">Delete</a>
+                        <a href="{{ route('form.list.member.delete', ['slug' => $slug, 'email' => $item]) }}">Delete</a>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" style="text-align: center">Empty Data</td>
+                    <td colspan="3">Tidak ada Member Terdaftar</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
-    <div style="text-align: center">
-        {{ $activity->links() }}
-    </div>
 </body>
 </html>

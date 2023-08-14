@@ -13,12 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('massages', function (Blueprint $table) {
+        Schema::create('users_details', function (Blueprint $table) {
             $table->id();
-            $table->string('code');
-            $table->text('massage_box')->nullable();
-            $table->text('massage_history')->nullable();
-            $table->enum('status', ['aktif', 'nonaktif']);
+            $table->string('email')->unique();
+            $table->text('activity')->nullable();
+            $table->text('form')->nullable();
             $table->timestamps();
         });
     }
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('massages');
+        Schema::dropIfExists('users_details');
     }
 };
