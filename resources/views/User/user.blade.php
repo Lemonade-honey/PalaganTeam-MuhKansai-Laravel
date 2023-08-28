@@ -4,7 +4,7 @@
 
 <div class="p-4">
     <div class="flex items-center justify-between py-5">
-        <h1 class="font-bold text-blue-800 text-2xl mb-0">News List</h1>
+        <h1 class="font-bold text-emerald-700 text-2xl mb-0">User List</h1>
     </div>
     <hr />
 
@@ -80,8 +80,8 @@
                                 View
                             </a>
                             @if ($value->role != 'admin')
-                            <a href="#"
-                                onclick="return confirm('Apakah anda yakin menghapus data ini?')" type="button"
+                            <a href="#" id="delete" dataGet="{{ $value->id }}"
+                                type="button"
                                 class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-3.5 rounded">
                                 Delete
                             </a>
@@ -102,4 +102,27 @@
     </div>
 </div>
 
+@endsection
+
+@section('script')
+<script>
+    const deleletBtn = document.querySelectorAll('#delete');
+    deleletBtn.forEach(element => {
+        element.addEventListener('click', () => {
+            Swal.fire({
+                title: 'Are you sure to delete it?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/dashboard/users/delete/' + element.getAttribute('dataGet')
+            }
+        })
+    })
+    });
+</script>
 @endsection

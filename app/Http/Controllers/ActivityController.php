@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ActivityController extends Controller
@@ -57,7 +58,7 @@ class ActivityController extends Controller
             'tanggal' => ['required', 'date', 'after_or_equal:' . date('Y-m-d')],
             'time_start' => ['required', 'date_format:H:i'],
             'time_finish' => ['required', 'date_format:H:i', 'after:time_start'],
-            'details' => ['required', 'max:1500']
+            'details' => ['required']
         ],[
             'time_finish.after' => 'finish time must be greater than start time'
         ]);
@@ -69,7 +70,8 @@ class ActivityController extends Controller
                 'time-start' => $request->time_start,
                 'time-finish' => $request->time_finish,
                 'details' => $request->details
-            ])
+            ]),
+            'created_by' => Auth::user()->email
         ]);
 
         return redirect()->route('activity.list')->with('success', 'Activity Succsess Created');
@@ -98,7 +100,7 @@ class ActivityController extends Controller
             'tanggal' => ['required', 'date', 'after_or_equal:' . date('Y-m-d')],
             'time_start' => ['required', 'date_format:H:i'],
             'time_finish' => ['required', 'date_format:H:i', 'after:time_start'],
-            'details' => ['required', 'max:1500']
+            'details' => ['required']
         ],[
             'time_finish.after' => 'finish time must be greater than start time'
         ]);

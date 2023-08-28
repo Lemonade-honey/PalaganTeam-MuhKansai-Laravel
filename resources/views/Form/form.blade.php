@@ -1,17 +1,18 @@
-@extends('layout.dashboard', ['title' => 'Activity'])
+@extends('layout.dashboard', ['title' => 'Form'])
 
 @section('body')
+
 <div class="p-4">
     <div class="flex items-center justify-between py-5">
-        <h1 class="font-bold text-emerald-700 text-2xl mb-0">Activity List</h1>
-        <a href="{{ route('activity.create') }}">
+        <h1 class="font-bold text-emerald-700 text-2xl mb-0">Form List</h1>
+        <a href="{{ route('form.create') }}">
             <button class="bg-blue-600 hover:bg-blue-800 text-white rounded px-2 text-md font-semibold p-1">Add
-                Activity</button>
+                New Form</button>
         </a>
     </div>
     <hr />
 
-    <form action="{{ route('activity.search') }}" method="GET">   
+    <form action="{{ route('news.searchDas') }}" method="GET">   
         <label for="default-search" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -45,10 +46,13 @@
                         Title
                     </th>
                     <th scope="col" class="px-6 py-3">
-                        Date
+                        Categori
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Author
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Set to
                     </th>
                     <th scope="col" class="px-6 py-3">
                         Created At
@@ -59,26 +63,34 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($activity as $key => $value)
+                @forelse ($form as $key => $value)
                 <tr class="bg-white border-b hover:bg-gray-200">
                     <td class="px-6 py-4">
-                        {{ ($activity->currentPage() - 1) * $activity->perPage() + $key + 1 }}
+                        {{ ($form->currentPage() - 1) * $form->perPage() + $key + 1 }}
                     </td>
                     <td class="px-6 py-4 capitalize">
                         {{ $value->title }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ date('d F Y', strtotime($value->tanggal)) }}
+                        {{ $value->categori ?? "none" }}
                     </td>
                     <td class="px-6 py-4">
                         {{ $value->created_by }}
                     </td>
                     <td class="px-6 py-4">
-                        {{ $value->created_at }}
+                        {{ $value->status }}
+                    </td>
+                    <td class="px-6 py-4">
+                        {{ date("d-m-Y, H:i:s", strtotime($value->created_at)) }}
                     </td>
                     <td>
                         <div class="flex flex-row space-x-2 float-right">
-                            <a href="{{ route('activity.update', ['id' => $value->id]) }}"
+                            <a href="{{ route('form.mainForm', ['slug' => $value->slug]) }}"
+                                class="bg-blue-500  hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                View
+                            </a>
+                            @if ($value->created_by == Auth::user()->email || Auth::user()->role == 'admin')
+                            <a href="{{ route('form.update', ['slug' => $value->slug]) }}"
                                 class="bg-yellow-500  hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
                                 Edit
                             </a>
@@ -87,6 +99,7 @@
                                 class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-3.5 rounded">
                                 Delete
                             </button>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -98,13 +111,12 @@
             </tbody>
         </table>
         <div class="pt-8">
-            {{ $activity->links() }}
+            {{ $form->links() }}
         </div>
     </div>
 </div>
 
 @endsection
-
 
 @section('script')
 <script>
@@ -121,7 +133,7 @@
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = '/dashboard/activity/delete/' + element.getAttribute('dataGet')
+                window.location.href = '/dashboard/form/delete/' + element.getAttribute('dataGet')
             }
         })
     })

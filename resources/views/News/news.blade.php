@@ -4,7 +4,7 @@
 
 <div class="p-4">
     <div class="flex items-center justify-between py-5">
-        <h1 class="font-bold text-blue-800 text-2xl mb-0">News List</h1>
+        <h1 class="font-bold text-emerald-700 text-2xl mb-0">News List</h1>
         <a href="{{ route('news.create') }}">
             <button class="bg-blue-600 hover:bg-blue-800 text-white rounded px-2 text-md font-semibold p-1">Add
                 News</button>
@@ -77,11 +77,11 @@
                                 class="bg-yellow-500  hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
                                 Edit
                             </a>
-                            <a href="{{ route('news.delete', ['slug' => $value->slug]) }}"
-                                onclick="return confirm('Apakah anda yakin menghapus data ini?')" type="button"
+                            <button
+                                type="button" id="delete" dataGet="{{ $value->id }}"
                                 class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-3.5 rounded">
                                 Delete
-                            </a>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -98,4 +98,27 @@
     </div>
 </div>
 
+@endsection
+
+@section('script')
+<script>
+    const deleletBtn = document.querySelectorAll('#delete');
+    deleletBtn.forEach(element => {
+        element.addEventListener('click', () => {
+            Swal.fire({
+                title: 'Are you sure to delete it?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/dashboard/news/delete/' + element.getAttribute('dataGet')
+            }
+        })
+    })
+    });
+</script>
 @endsection

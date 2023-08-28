@@ -4,15 +4,34 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    @yield('desc')
     <title>{{ $title ?? config('app.name') }}</title>
     @vite('public/assets/css/app.css')
     <link rel="stylesheet" href="{{asset('assets/css/CK.css')}}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.0/flowbite.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ asset('assets/css/CK.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    @yield('style')
+    <style>
+        .image-style{
+            width: 50rem;
+            height: 29rem;
+        }#details a{
+            color: blue;
+        }
+    </style>
 </head>
 
 <body>
-    @include('Includes.navbar2')
+    @include('Includes.navbar')
 
-    @yield('body')
+    <div class="navbar-height">
+        <div class="pt-11"></div>
+        @yield('body')
+    </div>
     @include('Includes.footer')
 
     <script src="{{ asset('assets/js/jquery-3.7.0.min.js') }}"></script>
@@ -33,17 +52,53 @@
     })
     </script>
     <script>
+        function ml(tagName, props, nest) {
+            var el = document.createElement(tagName);
+            if(props) {
+                for(var name in props) {
+                    if(name.indexOf("on") === 0) {
+                        el.addEventListener(name.substr(2).toLowerCase(), props[name], false)
+                    } else {
+                        el.setAttribute(name, props[name]);
+                    }
+                }
+            }
+            if (!nest) {
+                return el;
+            }
+            return nester(el, nest)
+        }
+
+        function nester(el, n) {
+            if (typeof n === "string") {
+                var t = document.createTextNode(n);
+                el.appendChild(t);
+            } else if (n instanceof Array) {
+                for(var i = 0; i < n.length; i++) {
+                    if (typeof n[i] === "string") {
+                        var t = document.createTextNode(n[i]);
+                        el.appendChild(t);
+                    } else if (n[i] instanceof Node){
+                        el.appendChild(n[i]);
+                    }
+                }
+            } else if (n instanceof Node){
+                el.appendChild(n)
+            }
+            return el;
+        }
+
         const btnReply = document.querySelectorAll('#reply')
-        const create = document.createElement('input');
-        create.setAttribute('id', 'reply_editor')
-        create.setAttribute('class', 'px-0 w-full text-sm text-gray-900 border-0 focus:ring-0 dark:text-white dark:placeholder-gray-400 dark:bg-gray-800');
-        create.setAttribute('name', 'reply')
-        create.setAttribute('placeholder', 'write reply...');
-        btnReply?.forEach(element => {
+        const reply = ml('div', {class: 'mt-2'}, [
+            ml('textarea', {class: "p-2.5 w-full text-sm text-gray-900 rounded-lg bg-white border border-gray-300", rows: "1", placeholder: "write reply..", name: "reply"}, []),
+            ml('input', {type: "hidden", name: "_token", value: "{{ csrf_token() }}"}),
+            ml('button', { type: "submit", class: "inline-flex items-center py-2.5 px-4 text-xs font-medium text-center text-white bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-200 hover:bg-blue-800"}, "Post Reply")
+        ])
+        btnReply.forEach(element => {
             element.addEventListener('click', () => {
-                if(element.parentNode.children.length < 2){
-                    element.parentNode.appendChild(create)
-                }else{
+                if (element.parentNode.children.length < 2) {
+                    element.parentNode.appendChild(reply)
+                } else {
                     element.parentElement.lastChild.remove()
                 }
             })

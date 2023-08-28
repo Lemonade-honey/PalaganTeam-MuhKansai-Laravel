@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UsersDetails;
+use App\Service\ActivityService;
 use App\Service\UserService;
 use Exception;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 
@@ -16,16 +19,28 @@ class HomeController extends Controller
 {
 
     private UserService $userService;
+    private ActivityService $activityService;
     public function __construct()
     {
         $this->userService = new UserService;
+        $this->activityService = new ActivityService;
     }
 
     /**
      * GET Home Page, Web Profile
      */
     public function index(){
-        return view('Home/home');
+        $slider = DB::table('sliders')
+        ->get();
+
+        $news = DB::table('news')
+        ->orderByDesc('id')
+        ->limit(3)
+        ->get();
+
+        $activity = $this->activityService->activityWeek();
+
+        return view('home', compact('slider', 'news', 'activity'));
     }
 
     /**
@@ -79,6 +94,10 @@ class HomeController extends Controller
             'name' => $request['name'],
             'email' => $request['email'],
             'password' => Hash::make($request['password'])
+        ]);
+
+        $userDetail = UsersDetails::create([
+            'email' => $request['email']
         ]);
 
         event(new Registered($user));

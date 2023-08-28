@@ -19,12 +19,29 @@ class NewsController extends Controller
     public function list(){
         $news = DB::table('news')->orderByDesc('id')->paginate(10);
 
-        // $news->map( function($news){
-        //     $news->details = unserialize($news->details);
-        // });
-
-        // dd($news);
         return view('News.news', compact('news'));
+    }
+
+    /**
+     * GET Public News
+     */
+    public function listPublic(){
+        $news = DB::table('news')->orderByDesc('id')->paginate(10);
+
+        $newsPanel = DB::table('news')->orderByDesc('id')->limit(4)->get();
+        return view('news.news-public', compact('news', 'newsPanel'));
+    }
+
+    /**
+     * GET Public Search News
+     */
+    public function listPublicSearch(Request $request){
+        $news = DB::table('news')->where('title', 'like', '%'.$request->search.'%')
+        ->orderByDesc('id')->paginate(10);
+
+        $newsPanel = DB::table('news')->orderByDesc('id')->limit(4)->get();
+
+        return view('news.news-public', compact('news', 'newsPanel'));
     }
 
     /**
@@ -55,13 +72,14 @@ class NewsController extends Controller
     public function postCreate(Request $request){
         $request->validate([
             'title' => ['required', 'max:100', 'unique:news'],
-            'img-thumbnail' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:2024'],
+            'img-thumbnail' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:4024'],
             'details' => 'required',
+            'massage' => ['required', 'in:yes,no']
         ]);
 
         try{
             DB::beginTransaction();
-            if($request->has('form-massage')){
+            if($request->massage == "yes"){
                 $massage = Massage::create(['code' => Str::random(25), 'status' => 'aktif']);
                 $massage = $massage->id;
             }else{
@@ -94,7 +112,10 @@ class NewsController extends Controller
      * GET Update News
      */
     public function update(string $slug){
-        $news = DB::table('news')->where('slug', "=", $slug)->first();
+        $news = DB::table('news')
+        ->select("news.*", "massages.status as massage_status")
+        ->leftJoin("massages", "massages.id", "=", "news.id_massage")
+        ->where('news.slug', '=', $slug)->first();;
 
         return view('News/news-update', compact('news'));
 
@@ -105,45 +126,74 @@ class NewsController extends Controller
      * POST Update News
      */
     public function postUpdate(Request $request, string $slug){
+        $news = DB::table('news')->select('id')->where('slug', '=', $slug)->first();
+        $news = News::findOrFail($news->id);
         $request->validate([
             'title' => ['required', 'max:100'],
             'details' => 'required',
-            'img-thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2024'],
+            'img-thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4024'],
         ]);
 
-        if($request->hasFile('img-thumbnail')){
-            $type = $request->file('img-thumbnail')->getClientOriginalExtension();
-            $filename = substr($request->title, 0, 10) . "_" . date('dmy') . "_" . Str::random(20) . "." . $type;
+        try{
+            DB::beginTransaction();
 
-            // move file
-            $request->file('img-thumbnail')->move(public_path('image/news/thumbnail'), $filename);
+            // update massage table
+            if($news->id_massage != null && $request->massage == 'no'){
+                $massage = Massage::findOrFail($news->id_massage);
+                $massage->status = "nonaktif";
+                $massage->save();
 
-            // remove old image
-            $OldImgThum = DB::table('news')->select('img')->where('slug', '=', $slug)->first();
-            if(file_exists(public_path('image/news/thumbnail/') . $OldImgThum->img)){
-                unlink(public_path('image/news/thumbnail/') . $OldImgThum->img);
+                $massage = $massage->id;
+            }else if($news->id_massage != null && $request->massage == 'yes'){
+                $massage = Massage::findOrFail($news->id_massage);
+                $massage->status = "aktif";
+                $massage->save();
+
+                $massage = $massage->id;
             }
 
-            $news = DB::table('news')->where('slug', '=', $slug)->update(
-                [
-                    'title' => $request->title,
-                    'details' => $request->details,
-                    'img' => $filename,
-                    'updated_at' => date('Y-m-d H:i:s', strtotime(now()))
-                ]
-            );
+            // create massage table
+            if($news->id_massage == null && $request->massage == 'no'){
+                $massage = null;
+            }else if($news->id_massage == null && $request->massage == 'yes'){
+                $massage = Massage::create(['code' => Str::random(25), 'status' => 'aktif']);
 
-        } else{
-            $news = DB::table('news')->where('slug', '=', $slug)->update(
-                [
-                    'title' => $request->title,
-                    'details' => $request->details,
-                    'updated_at' => date('Y-m-d H:i:s', strtotime(now()))
-                ]
-            );
+                $massage = $massage->id;
+            }
+
+
+            if($request->hasFile('img-thumbnail')){
+                $type = $request->file('img-thumbnail')->getClientOriginalExtension();
+                $filename = substr($request->title, 0, 10) . "_" . date('dmy') . "_" . Str::random(20) . "." . $type;
+                // return dd($filename);
+    
+                // move file
+                $request->file('img-thumbnail')->move(public_path('image/news/thumbnail'), $filename);
+    
+                // remove old image
+                $OldImgThum = $news->img;
+                if(file_exists(public_path('image/news/thumbnail/') . $OldImgThum)){
+                    unlink(public_path('image/news/thumbnail/') . $OldImgThum);
+                }
+    
+                $news->title = $request->title;
+                $news->details = $request->details;
+                $news->img = $filename;
+            } else{
+                
+                $news->title = $request->title;
+                $news->details = $request->details;
+            }
+            
+            $news->id_massage = $massage;
+            $news->save();
+            DB::commit();
+            return redirect()->route('news.list')->with('success', 'News Succsess Updated');
+        } catch(Exception $ex){
+            DB::rollBack();
+
+            return $ex->getMessage();
         }
-
-        return redirect()->route('news.list')->with('success', 'News Succsess Updated');
     }
 
     /**
@@ -151,17 +201,19 @@ class NewsController extends Controller
      * 
      * Delete Logic
      */
-    public function delete(string $slug){
-        if(DB::table('news')->where('slug', '=', $slug)->exists()){
-            $img = DB::table('news')->select('img')->where('slug', '=', $slug)->first();
-            if(file_exists(public_path('image/news/thumbnail/') . $img->img)){
-                unlink(public_path('image/news/thumbnail/') . $img->img);
-            }
-            DB::table('news')->where('slug', '=', $slug)->delete();
-            return redirect()->route('news.list')->with('success', 'News Succsess Deleted');
-        }else{
-            return redirect()->route('news.list')->withErrors('Failer Delete, News not found');
+    public function delete(int $id){
+        $news = News::find($id);
+
+        if(!$news){
+            return redirect()->route('users.list')->with('errors', 'Failed to Delete, News Not Found');
         }
+
+        if(file_exists(public_path('image/news/thumbnail/') . $news->img)){
+            unlink(public_path('image/news/thumbnail/') . $news->img);
+        }
+
+        $news->delete();
+        return redirect()->route('news.list')->with('success', 'News Succsess Deleted');
 
     }
 

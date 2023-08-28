@@ -7,6 +7,7 @@ use App\Http\Controllers\FormController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MassageController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\SliderController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
@@ -22,17 +23,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/dashboardTest', function () {
-    return view('dashboardHome');
-} );
-
-Route::get('/form/{slug}', [FormController::class, 'details'])->name('public.form.details');
-Route::post('/form/{slug}', [FormController::class, 'formPassword'])->name('form.formPassword');
-Route::get('/news/{slug}', [NewsController::class, 'details']);
+// news
+Route::get('/news', [NewsController::class, 'listPublic']);
+Route::get('/news/search', [NewsController::class, 'listPublicSearch'])->name('newsPublicSearch');
+Route::get('/news/{slug}', [NewsController::class, 'details'])->name('newsPublic');
 
 // geteway massage
 Route::post('/massage/{id}/{slug}', [MassageController::class, 'store'])->name('massage.store');
@@ -40,7 +36,6 @@ Route::post('/massage/reply/{id}/{slug}/{kode}', [MassageController::class, 'sto
 Route::get('/massage/{id}/{slug}/{kode}', [MassageController::class, 'delete'])->name('massage.delete');
 Route::get('/massage/{id}/{slug}/{kode}/{replyKode}', [MassageController::class, 'deleteReply'])->name('massage.deleteReply');
 
-Route::get('/test/{id}/{slug}/{kode}', [MassageController::class, 'test'])->name('massage.test');
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', [HomeController::class, 'login'])->name('login');
@@ -60,18 +55,49 @@ Route::prefix('email')->group(function () {
     Route::get('/verify/{id}/{hash}', [VerificationController::class, 'verify'])->middleware(['auth', 'signed'])->name('verification.verify');
 });
 
-Route::get('/news', [NewsController::class, 'list']);
-Route::get('/news/{slug}', [NewsController::class, 'details']);
-
-Route::get('/test', fn () => "awww")->middleware(['role:admin,user']);
-
 // Dashboard
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('/dashboard')->group(function () {
         Route::get('/logout', [HomeController::class, 'logout'])->name('logout');
 
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard.home');
-        Route::get('/profile', [DashboardController::class, 'profile']);
+
+        // form route
+        Route::prefix('/form')->group(function (){
+
+            // private access
+            Route::middleware(['role:staf,admin'])->group(function (){
+                Route::get('/', [FormController::class, 'list'])->name('form.list');
+                Route::get('/create', [FormController::class, 'create'])->name('form.create');
+                Route::post('/create', [FormController::class, 'postCreate'])->name('form.postCreate');
+                
+                Route::get('/{slug}/create', [FormController::class, 'subFormCreate'])->name('form.subForm.create');
+                Route::post('/{slug}/create', [FormController::class, 'postSubFormCreate'])->name('subForm.postCreate');
+
+                // delete form
+                Route::get('/delete/{slug}', [FormController::class, 'deleteForm'])->name('form.deleteForm');
+                Route::get('/delete/{id}/{slug}', [FormController::class, 'deleteSubForm'])->name('subForm.deleteSubForm');
+
+                Route::get('/update/{slug}', [FormController::class, 'update'])->name('form.update');
+                Route::post('/update/{slug}', [FormController::class, 'postUpdate'])->name('form.postUpdate');
+
+            });
+            
+            // public url
+            Route::get('/list', [FormController::class, 'listUser'])->name('form.listUser');
+            Route::get('/list/search', [FormController::class, 'searchList'])->name('form.listSearch');
+            Route::get('/myform', [FormController::class, 'myForms'])->name('form.myForm');
+            
+            Route::get('/register-user/{slug}', [FormController::class, 'registerUserForm'])->name('form.registerUserForm');
+            Route::post('/register-private/{slug}', [FormController::class, 'formPassword'])->name('form.formPassword');
+            Route::get('/leave-user/{slug}', [FormController::class, 'leaveUserForm'])->name('form.leaveUserForm');
+            
+            Route::get('/{slug}', [FormController::class, 'mainForm'])->name('form.mainForm');
+            Route::get('/{slug}/member', [FormController::class, 'memberRegister'])->name('form.memberReg');
+            Route::get('/{slug}/member/delete/{email}', [FormController::class, 'memberDelete'])->name('form.member.delete');
+            Route::get('/{slug}/{sub_slug}', [FormController::class, 'subForm'])->name('form.subForm');
+        });
+
         // staff or admin only
         Route::middleware(['role:staf,admin'])->group(function () {
             // news route
@@ -96,16 +122,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::get('/delete/{id}', [ActivityController::class, 'delete'])->name('activity.delete');
             });
 
-            // form route
-            Route::prefix('/form')->group(function (){
-                Route::get('/', [FormController::class, 'list'])->name('form.list');
-                Route::get('/create', [FormController::class, 'create'])->name('form.create');
-                Route::post('/create', [FormController::class, 'postCreate'])->name('form.postCreate');
-                Route::get('/update/{slug}', [FormController::class, 'update'])->name('form.update');
-                Route::get('/update/{slug}/member', [FormController::class, 'memberRegister'])->name('form.list.member');
-                Route::get('/update/{slug}/member/delete/{email}', [FormController::class, 'memberDelete'])->name('form.list.member.delete');
-            });
-
             //ckeditor image upload
             Route::post('/ckeditor-upload', [CKEditorController::class, 'uploadNews'])->name('ckeditor.uploadNews');
         });
@@ -119,6 +135,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::get('/update/{id}', [UserController::class, 'update'])->name('users.update');
                 Route::post('/update/{id}', [UserController::class, 'postUpdate'])->name('users.postUpdate');
                 Route::get('/delete/{id}', [UserController::class, 'delete'])->name('users.delete');
+            });
+
+            Route::prefix('/sliders')->group(function (){
+                Route::get('/', [SliderController::class, 'index'])->name('sliders');
+                Route::post('/', [SliderController::class, 'post']);
+                Route::get('/delete/{id}', [SliderController::class, 'delete'])->name('slider.delete');
             });
         });
     });

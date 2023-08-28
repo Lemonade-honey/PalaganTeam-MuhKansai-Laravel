@@ -28,11 +28,19 @@
         </div>
         
         <div class="mb-6">
+            <label for="countries" class="block mb-2 text-md font-medium text-gray-900 dark:text-white">Commentar Massage</label>
+            <select id="countries" name="massage" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <option value="yes" selected>Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div>
+
+        <div class="mb-6">
             <label for="editor" class="block mb-2 text-md font-medium text-gray-900 dark:text-white">News Description</label>
             <textarea name="details" id="editor" cols="30" rows="10">{{ old('details') }}</textarea>
         </div>
 
-        <button class="bg-blue-600 hover:bg-blue-800 text-white rounded px-2 text-md font-semibold p-1 float-right mb-6">Create Activity</button>
+        <button class="bg-blue-600 hover:bg-blue-800 text-white rounded px-2 text-md font-semibold p-1 float-right mb-6">Create News</button>
     </form>
     @include('Includes.CKEditor')
 </div>

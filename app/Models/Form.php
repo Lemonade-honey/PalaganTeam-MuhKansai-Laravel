@@ -13,10 +13,13 @@ class Form extends Model
         'title',
         'slug',
         'desc',
-        'details',
+        'form',
         'status',
+        'categori',
+        'img',
         'password',
         'register',
         'id_massage',
+        'created_by'
     ];
 }

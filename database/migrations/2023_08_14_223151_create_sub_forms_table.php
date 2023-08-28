@@ -13,17 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('forms', function (Blueprint $table) {
+        Schema::create('sub_forms', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->string('desc');
-            $table->enum('status', ['public', 'private']);
-            $table->string('img')->nullable();
-            $table->string('categori')->nullable();
-            $table->text('form')->nullable();
-            $table->string('password')->nullable();
-            $table->text('register')->nullable();
+            $table->string('form');
+            $table->text('details');
             $table->string('id_massage')->nullable()->unique();
             $table->string('created_by');
             $table->timestamps();
@@ -37,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('forms');
+        Schema::dropIfExists('sub_forms');
     }
 };

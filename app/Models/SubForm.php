@@ -5,14 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Activity extends Model
+class SubForm extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'title',
-        'tanggal',
-        'details',
-        'created_by'
+        "title",
+        "slug",
+        "form",
+        "details",
+        "id_massage",
+        "created_by"
     ];
 }
